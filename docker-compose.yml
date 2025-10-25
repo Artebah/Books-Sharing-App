@@ -1,0 +1,22 @@
+version: "3.8"
+services:
+  # This is the name of your database service
+  db:
+    image: postgres:15-alpine
+    container_name: nest_postgres_db
+    restart: always
+    ports:
+      # Exposes the database port ${DB_PORT} to your local machine
+      - "${DB_PORT}:${DB_PORT}"
+    environment:
+      # These are the credentials your NestJS app will use
+      POSTGRES_USER: ${myuser}
+      POSTGRES_PASSWORD: ${mypassword}
+      POSTGRES_DB: ${mynestdb}
+    volumes:
+      # This saves your database data to a local folder
+      # so it persists even if you stop/remove the container
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
