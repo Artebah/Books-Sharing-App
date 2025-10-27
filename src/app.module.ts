@@ -8,13 +8,15 @@ import {
   GlobalTypedConfig,
 } from "./config/app.config";
 import { typeormConfig } from "./config/typeorm.config";
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from "./auth/auth.module";
+import { User } from "./user/entities/User.entity";
+import { authConfig } from "./config/auth.config";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [typeormConfig],
+      load: [typeormConfig, authConfig],
       validationSchema: globalConfigValidationSchema,
       validationOptions: { abortEarly: true },
     }),
@@ -23,7 +25,7 @@ import { AuthModule } from './auth/auth.module';
       inject: [ConfigService],
       useFactory: async (configService: GlobalTypedConfig) => ({
         ...(await configService.get("typeorm")),
-        entities: [],
+        entities: [User],
       }),
     }),
     AuthModule,
