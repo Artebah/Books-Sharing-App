@@ -1,10 +1,15 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { SearchUserDto } from "./dtos/search-user.dto";
 import { Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entities/User.entity";
 import * as bcrypt from "bcrypt";
 import { RegisterDto } from "src/common/dtos/register.dto";
+import { LoginDto } from "src/common/dtos/login.dto";
 
 @Injectable()
 export class UserService {
@@ -12,7 +17,7 @@ export class UserService {
     @InjectRepository(User) private usersRepository: Repository<User>,
   ) {}
 
-  async findOne(searchUserDto: SearchUserDto) {
+  async findOne(searchUserDto: SearchUserDto): Promise<User> {
     if (!searchUserDto.email && !searchUserDto.username) {
       throw new BadRequestException(
         "At least one search criterion (username or email) must be provided.",
@@ -33,6 +38,10 @@ export class UserService {
       where: conditions,
     });
 
+    if (!foundUser) {
+      throw new UnauthorizedException("User not found");
+    }
+
     return foundUser;
   }
 
@@ -49,7 +58,25 @@ export class UserService {
     return newUser;
   }
 
-  private encryptPassword(password: string) {
+  async validateUser(loginDto: LoginDto): Promise<User> {
+    const foundUser = await this.findOne(loginDto);
+
+    const isPasswordValid = await this.verifyPassword(
+      loginDto.password,
+      foundUser.password,
+    );
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException("Invalid credentials");
+    }
+
+    return foundUser;
+  }
+
+  encryptPassword(password: string) {
     return bcrypt.hash(password, 10);
+  }
+  verifyPassword(password: string, storedPassword: string) {
+    return bcrypt.compare(password, storedPassword);
   }
 }

@@ -29,5 +29,6 @@ export class User {
   createdAt: Date;
 
   @UpdateDateColumn()
+  @Expose()
   updatedAt: Date;
 }
